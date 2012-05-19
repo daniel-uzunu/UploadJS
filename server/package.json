@@ -1,0 +1,11 @@
+{
+    "name": "UploadJS",
+    "description": "JavaScript uploader for modern browsers",
+    "version": "0.0.1",
+    "author": "Daniel Uzunu <daniel_uzunu@yahoo.com>",
+    "dependencies": {
+        "express": ""
+    },
+    "keywords": ["javascript", "upload"],
+    "repository": "https://github.com/daniel-uzunu/UploadJS"
+}
