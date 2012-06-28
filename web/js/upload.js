@@ -30,8 +30,12 @@
      * @param files currently selected files
      */
     Uploader.prototype.processFiles = function (files) {
-        console.log(files);
-        window.a = files;
+        for(var i = 0; i < files.length; i++) {
+        	console.log(files[i].name);
+        	var reader = new FileReader();  
+            reader.onload = function(e) { console.log(e.target.result); };
+            reader.readAsBinaryString(files[i]);
+        }
     };
 
     UploadJS.Uploader = Uploader;
