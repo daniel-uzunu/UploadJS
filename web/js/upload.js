@@ -1,7 +1,11 @@
 ﻿var UploadJS = {};
 
 (function () {
-    /**
+    
+	/* constants */
+	var CHUNK_SIZE = 1024 * 1024; //bytes	
+	
+	/**
      * Uploader class
      * @constructor
      * @param {String} id the id of the input type="file" element
@@ -9,19 +13,19 @@
     var Uploader = function (id) {
         var self = this;
 
-        this.upload = document.getElementById(id);
+        this.uploader = document.getElementById(id);
         this.btn = document.getElementById('btnUpload');
 
-        if (!this.upload) {
+        if (!this.uploader) {
             throw new Error('The specifed id does not exist in DOM');
         }
 
         this.btn.addEventListener('click', function () {
-            self.upload.click();
+            self.uploader.click();
         });
 
-        this.upload.addEventListener('change', function () {
-            self.processFiles(self.upload.files);
+        this.uploader.addEventListener('change', function () {
+            self.processFiles(self.uploader.files);
         });
     };
 
@@ -31,10 +35,38 @@
      */
     Uploader.prototype.processFiles = function (files) {
         for(var i = 0; i < files.length; i++) {
-        	console.log(files[i].name);
-        	var reader = new FileReader();  
-            reader.onload = function(e) { console.log(e.target.result); };
-            reader.readAsBinaryString(files[i]);
+        	console.log(files[i]);
+        	this.upload(files[i]);
+        }
+    };
+    
+    Uploader.prototype.upload = function (file) {
+    	for (var i = 0; i < file.size; i += CHUNK_SIZE) {
+    		var chunk = file.slice(i, i + CHUNK_SIZE);
+    		this.readFileChunk(chunk);
+    	}
+    };
+    
+    Uploader.prototype.readFileChunk = function (fileChunk) {
+    	var reader = new FileReader();
+    	
+        reader.addEventListener('progress', function (e) {
+    		console.log('progress', e);
+    	});
+    	
+    	reader.addEventListener('load', function (e) {
+    		console.log('load', e);
+    		console.log(e.target.result);
+    	});
+    	
+    	reader.addEventListener('error', function (e) {
+    		console.log('error', e);
+    	});
+        
+        try {
+        	reader.readAsBinaryString(fileChunk);
+        } catch (ex) {
+        	console.log('catch', ex);
         }
     };
 
