@@ -4,7 +4,7 @@
     "version": "0.0.1",
     "author": "Daniel Uzunu <daniel_uzunu@yahoo.com>",
     "dependencies": {
-        "express": ""
+        "express": "3.x"
     },
     "keywords": ["javascript", "upload"],
     "repository": "https://github.com/daniel-uzunu/UploadJS"
