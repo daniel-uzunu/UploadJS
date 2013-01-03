@@ -2,21 +2,21 @@
 <html>
 <head>
     <title>UploadJS</title>
-    <script type="text/javascript" src="js/upload.js"></script>
+    <script type="text/javascript" src="js/lib/q.js"></script>    
+    <script type="text/javascript" src="js/upload_manager.js"></script>
     <script type="text/javascript">
         document.addEventListener('DOMContentLoaded', function () {
-            var uploader = new UploadJS.Uploader('upload');
+            var upload = document.getElementById('upload');
+
+            upload.addEventListener('change', function () {
+                var manager = new UploadJS.UploadManager('', upload.files);
+                manager.startUpload();
+            });
         });
     </script>
 </head>
 <body>
     <h1>UploadJS Example</h1>
     <input id="upload" type="file" multiple>
-    <button id="btnUpload">Select Files</button>
-
-    <!--<form method="post" action="/upload">
-        <input type="file" id="up" name="up" value="Upload" />
-        <input type="submit" id="btn" value="btn" name="btn" />
-    </form>-->
 </body>
 </html>
