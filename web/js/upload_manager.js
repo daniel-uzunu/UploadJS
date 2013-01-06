@@ -2,7 +2,7 @@
 
 (function (UploadJS, undefined) {
 
-    var CHUNK_SIZE = 1024 * 1024; //bytes
+    var CHUNK_SIZE = 1024 * 1024 * 10; //bytes
 
     /**
      * Uploads one or more files to the specified endpoint. It can upload files of any size by
@@ -31,7 +31,7 @@
             .then(function () {
                 console.log('success');
             }, function (e) {
-                console.log('error ', e);
+                console.log('error: ', e);
             });
         }
     };    
@@ -54,11 +54,12 @@
         if (from < file.size) {
             return Q.fcall(function () {
                 var chunk = file.slice(from, from + CHUNK_SIZE);
-                return self._readFileChunk(chunk);
-            })
-            .then(function (data) {
-                console.log('data: ', data.byteLength);
-                //send data to server
+                // self._readFileChunk(chunk);
+                // the data can also be read into an ArrayBuffer using a FileReader, but it is easier
+                // and more efficient to dirrectly pass the blob representing the file chunk to xhr.                
+                var xhr = new XMLHttpRequest();
+                xhr.open('POST', '/upload');
+                xhr.send(chunk);
                 return;
             })
             .then(function () {
@@ -110,7 +111,7 @@
 
     };
 
-    // maybe I'll use these mrthods to dinamically add or remove files to/from the queue
+    // maybe I'll use these methods to dinamically add or remove files to/from the queue
     UploadManager.prototype.addFile = function () { };
     UploadManager.prototype.removeFile = function () { };
 
