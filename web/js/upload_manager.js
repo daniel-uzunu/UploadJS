@@ -2,7 +2,7 @@
 
 (function (UploadJS, undefined) {
 
-    var CHUNK_SIZE = 1024 * 1024 * 10; //bytes
+    var CHUNK_SIZE = 1048576; // 1 MB in bytes
 
     /**
      * Uploads one or more files to the specified endpoint. It can upload files of any size by
@@ -34,17 +34,19 @@
                 console.log('error: ', e);
             });
         }
-    };    
+    };
 
     /**
-     * Reads a file and sends it to the server in chunks. Recursively calls itself with from being the position from where to read the next chunck.
-     * 
+     * Reads a file and sends it to the server in chunks. Recursively calls itself with from being
+     * the position from where to read the next chunck.
+     *
      * @param {File} file the file to send to the server.
      * @param {Number} [from] the position from which to read the next chunck.
-     * 
+     *
      * @returns {Promise} indicates when the upload finished.
      */
     UploadManager.prototype._readFileAndSend = function (file, from) {
+        console.log('read file: ', from, file.size);
         var self = this;
 
         if (from === undefined) {
@@ -53,21 +55,30 @@
 
         if (from < file.size) {
             return Q.fcall(function () {
-                var chunk = file.slice(from, from + CHUNK_SIZE);
-                // self._readFileChunk(chunk);
-                // the data can also be read into an ArrayBuffer using a FileReader, but it is easier
-                // and more efficient to dirrectly pass the blob representing the file chunk to xhr.                
+                // the data can also be read into an ArrayBuffer using a FileReader, but it is
+                // easier and more efficient to directly pass the blob representing the file chunk.
+                var chunk = file.slice(from, from + CHUNK_SIZE),
+                    deferred = Q.defer();
+
                 var xhr = new XMLHttpRequest();
+
+                xhr.addEventListener('load', function (e) {
+                    console.log(e);
+                    console.log(xhr.status);
+                    deferred.resolve();
+                });
+
                 xhr.open('POST', '/upload');
                 xhr.send(chunk);
-                return;
+
+                return deferred.promise;
             })
             .then(function () {
                 return self._readFileAndSend(file, from + CHUNK_SIZE);
             });
-        } else {
-            return;
         }
+
+        return;
     };
 
     /**
@@ -79,7 +90,7 @@
      */
     UploadManager.prototype._readFileChunk = function (fileChunk) {
         var deferred = Q.defer();
-        var reader = new FileReader();       
+        var reader = new FileReader();
 
         reader.addEventListener('load', function (e) {
             deferred.resolve(e.target.result);
@@ -89,12 +100,11 @@
             deferred.reject(e);
         });
 
-        
         // this can throw an error which is handled by the Q library by calling the reject callback
         reader.readAsArrayBuffer(fileChunk);
 
         return deferred.promise;
-    }
+    };
 
     UploadManager.prototype.pause = function () {
 
@@ -111,7 +121,7 @@
 
     };
 
-    // maybe I'll use these methods to dinamically add or remove files to/from the queue
+    // maybe I'll use these methods to dynamically add or remove files to/from the queue
     UploadManager.prototype.addFile = function () { };
     UploadManager.prototype.removeFile = function () { };
 
