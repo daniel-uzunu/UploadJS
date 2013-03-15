@@ -1,0 +1,7 @@
+https://developer.mozilla.org/en-US/docs/Using_files_from_web_applications
+https://developer.mozilla.org/en-US/docs/DOM/FileReader#readAsText%28%29
+http://www.w3.org/TR/FileAPI/#dfn-readAsText
+https://developer.mozilla.org/en-US/docs/DOM/XMLHttpRequest
+http://www.w3.org/TR/XMLHttpRequest/
+http://www.w3.org/TR/progress-events/
+https://developers.google.com/gdata/docs/resumable_upload#InitialRequestPython
