@@ -26,6 +26,20 @@
      * Starts the upload.
      */
     UploadManager.prototype.startUpload = function () {
+        var xhr = new XMLHttpRequest();
+
+        xhr.addEventListener('load', function (e) {
+            console.log(e);
+            console.log(xhr.status);
+            console.log(xhr.responseText);
+        });
+
+        xhr.open('POST', '/upload');
+        xhr.setRequestHeader('content-type', 'application/json');
+        xhr.setRequestHeader('accept', 'application/json');
+        xhr.send(JSON.stringify({type: 'image/png', length: 5000, title: 'myimage.png'}));
+
+        return;
         for (var i = 0, l = this._files.length; i < l; i++) {
             this._readFileAndSend(this._files[i])
             .then(function () {
