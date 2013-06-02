@@ -1,0 +1,2 @@
+- add methods to get in progress, failed, pending, uploaded files
+- UploadManager should be an event Emitter
