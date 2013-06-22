@@ -2,18 +2,69 @@
 
 (function (UploadJS) {
     /**
-     * Manages file uploads.
+     * Manages file uploads. The files are sent to the server in chunks using the specified transport.
+     * All the events receive the unique id associated with the file as the first parameter. An unique id is sent
+     * because more files can have the same name. This id is a valid identifier, meaning that it is safe to use
+     * it as the id of a DOM element.
+     *
+     * The following events are emitted:
+     * - started: indicates that the upload for the file was started;
+     * - progress: indicates the current number of bytes that were successfully sent. It is guaranteed that a progress
+     *   event is sent after each chunk is sent to the server;
+     * - finished: emitted after a successful upload;
+     * - error: an error occurred while the file was uploading. If no event handler is registered the error is thrown.
+     *
+     * @example
+     *
+     *      var manager = new Manager(new XhrTransport(), {chunkSize: 1024});
+     *
+     *      manager.on('started', function (fileId) {});
+     *      manager.on('progress', function (fileId, bytesSent) {});
+     *      manager.on('finished', function (fileId) {});
+     *      manager.on('error', function (fileId, error) {});
+     *
+     *      manager.upload(file);
+     *
      * @constructor
      *
      * @param {Transport} transport the transport used to upload files
      * @param {Object} [options] the options used to instantiate the upload manager
      */
     function UploadManager(transport, options) {
+        /**
+         * The list of file ids of the files waiting to be uploaded.
+         * @type {Array}
+         */
         this._queue = [];
+
+        /**
+         * Key-value map storing the files associated with the files
+         * @type {Object}
+         */
         this._fileMap = {};
+
+        /**
+         * The transport used to send the files to the server.
+         * @type {Transport}
+         */
         this._transport = transport;
+
+        /**
+         * The chunk size in bytes.
+         * @type {Number}
+         */
         this._chunkSize = options.chunkSize || 102400;
+
+        /**
+         * The next id that will be associated with a file.
+         * @type {Number}
+         */
         this._nextId = 0;
+
+        /**
+         * Indicates if a file upload is in progress.
+         * @type {Boolean}
+         */
         this._isUploading = false;
     }
 
@@ -22,10 +73,10 @@
     UploadManager.prototype = Object.create(EventEmitter.prototype);
 
     /**
-     * Adds a file to the list of files to be uploaded.
+     * Adds a file to the queue of files to be uploaded.
      *
      * @param {File} file the file to be uploaded
-     * @returns {String} the id associated with the current file
+     * @returns {String} the id associated with the file
      * @throws {Error} when no file was specified
      */
     UploadManager.prototype.upload = function (file) {
