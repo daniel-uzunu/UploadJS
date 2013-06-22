@@ -9,10 +9,11 @@
      * @param {Object} [options] the options used to instantiate the upload manager
      */
     function UploadManager(transport, options) {
-        this._files = [];
+        this._queue = [];
         this._transport = transport;
         this._chunkSize = options.chunkSize || 102400;
         this._nextId = 0;
+        this._isUploading = false;
     }
 
     UploadJS.UploadManager = UploadManager;
@@ -27,41 +28,59 @@
      * @throws {Error} when no file was specified
      */
     UploadManager.prototype.upload = function (file) {
-        var self = this;
-
         if (!file) {
             throw new Error('No argument was passed.');
         }
 
-        this._files.push(file);
-        this.emit('uploadStarted', file);
+        this._queue.push(file);
+
+        if (!this._isUploading) {
+            this._uploadQueuedFiles();
+        }
+
+        return 'file' + this._nextId++;
+    };
+
+    /**
+     * Uploads all the files in the queue.
+     * @private
+     */
+    UploadManager.prototype._uploadQueuedFiles = function () {
+        var self = this,
+            file = self._queue.shift();
+
+        this._isUploading = true;
 
         Q.fcall(function () {
+            self.emit('started', file);
             return self._transport.initiateUpload(file.name, file.size);
-        })
-        .then(function (id) {
+        }).then(function (id) {
             var promise = Q.resolve();
 
             for (var start = 0, size = file.size; start < size; start += self._chunkSize) {
-                promise = promise.then(self._sendChunk.bind(self, id, file, start));
+                promise = promise
+                    .then(self._sendChunk.bind(self, id, file, start))
+                    .then(function (bytesSent) {
+                        self.emit('progress', file, bytesSent);
+                    });
             }
 
             return promise;
-        })
-        .then(function (status) {
-            console.log(status);
-
-            //delayed the emitted event to avoid catching the errors thrown by the event handler in the
-            // fail handler
-            setTimeout(function () {
-                self.emit('uploadFinished', file);
-            }, 0);
-        })
-        .fail(function (error) {
-            console.log('fail', error);
-        });
-
-        return (this._nextId++).toString();
+        }).then(function () {
+            self.emit('finished', file);
+        }).fail(function (error) {
+            if (self.getListeners('error').length > 0) {
+                self.emit('error', file, error);
+            } else {
+                throw error;
+            }
+        }).fin(function () {
+            if (self._queue.length > 0) {
+                self._uploadQueuedFiles();
+            } else {
+                self._isUploading = false;
+            }
+        }).done();
     };
 
     /**
@@ -69,19 +88,11 @@
      * @param {String|Number} fileId the unique identifier generated for this upload
      * @param {File} file
      * @param {Number} start
-     * @returns {String} the upload status: complete|incomplete
+     * @returns {Promise} the number of bytes sent until now
      * @private
      */
     UploadManager.prototype._sendChunk = function (fileId, file, start) {
         var chunk = file.slice(start, start + this._chunkSize);
         return this._transport.send(fileId, chunk, start, start + this._chunkSize);
-    };
-
-    /**
-     * Gets all the files handled regardless of their status.
-     * @returns {Array} the list of files
-     */
-    UploadManager.prototype.getAllFiles = function () {
-        return this._files;
     };
 })(window.UploadJS = window.UploadJS || {});

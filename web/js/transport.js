@@ -3,6 +3,8 @@
 (function (UploadJS) {
     /**
      * An abstract class used to implement the communication with the server
+     *
+     * @interface
      */
     function Transport () {
 
@@ -27,7 +29,7 @@
      * @param {Blob} chunk the file chunk to be sent to the server
      * @param {Number} start
      * @param {Number} end
-     * @returns {Promise}
+     * @returns {Promise} the number of bytes sent until now
      */
     Transport.prototype.send = function (fileId, chunk, start, end) {};
 })(window.UploadJS = window.UploadJS || {});

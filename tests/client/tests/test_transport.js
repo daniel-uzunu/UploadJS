@@ -13,9 +13,7 @@
     TestTransport.prototype = Object.create(UploadJS.Transport);
 
     TestTransport.prototype.initiateUpload = function (fileName, fileSize) {
-        var self = this,
-            deferred = Q.defer(),
-            id = this._id++;
+        var id = this._id++;
 
         this._files[id] = {
             name: fileName,
@@ -23,33 +21,24 @@
             uploaded: 0
         };
 
-        setTimeout(function () {
-            deferred.resolve(id);
-        }, 0);
-
-        return deferred.promise;
+        return Q.fcall(function () {
+            return id;
+        });
     };
 
     TestTransport.prototype.send = function (fileId, chunk, start, end) {
         var self = this,
-            file = this._files[fileId],
-            deferred = Q.defer();
+            file = this._files[fileId];
 
         this._concurrentSends++;
 
-        setTimeout(function () {
+        return Q.fcall(function () {
             file.uploaded += chunk.size;
 
             self._maxConcurrentSends = Math.max(self._concurrentSends, self._maxConcurrentSends);
             self._concurrentSends--;
 
-            if (file.size === file.uploaded) {
-                deferred.resolve('complete');
-            } else {
-                deferred.resolve('incomplete');
-            }
-        }, 0);
-
-        return deferred.promise;
+            return file.uploaded;
+        });
     };
 })(window.TestUtils = window.TestUtils || {});

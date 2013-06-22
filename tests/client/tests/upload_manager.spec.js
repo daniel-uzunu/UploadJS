@@ -28,16 +28,6 @@ describe('Upload Manager', function () {
     });
 
     describe('single file, single connection', function () {
-        it('should add a file to the queue', function (done) {
-            manager.on('uploadFinished', function (file) {
-                done();
-            });
-
-            manager.upload(files[0]);
-
-            expect(manager.getAllFiles()).to.contain(files[0]);
-        });
-
         it('should throw an error when the file is null', function () {
             expect(function () {
                 manager.upload(null);
@@ -50,23 +40,22 @@ describe('Upload Manager', function () {
             }).to.throwError();
         });
 
-        it('should start uploading' , function (done) {
+        it('should emit the uploadStarted event' , function (done) {
             var callback = sinon.spy();
 
-            manager.on('uploadFinished', function (file) {
+            manager.on('finished', function (file) {
+                expect(callback.calledWith(files[0])).to.equal(true);
                 done();
             });
 
-            manager.on('uploadStarted', callback);
+            manager.on('started', callback);
             manager.upload(files[0]);
-
-            expect(callback.calledWith(files[0])).to.equal(true);
         });
 
-        it('should return an id associated with the file', function (done) {
+        it('should return an unique id associated with the file', function (done) {
             var counter = 0;
 
-            manager.on('uploadFinished', function (file) {
+            manager.on('finished', function (file) {
                 counter++;
 
                 if (counter === 2) {
@@ -83,7 +72,7 @@ describe('Upload Manager', function () {
         it('should send the chunks using the specified transport', function (done) {
             var file = files[0];
 
-            manager.on('uploadFinished', function (file) {
+            manager.on('finished', function (file) {
                 expect(transport.initiateUpload.calledWith(file.name, file.size)).to.equal(true);
                 var id = transport.initiateUpload.firstCall.returnValue.valueOf();
 
@@ -108,9 +97,9 @@ describe('Upload Manager', function () {
             var callback = sinon.spy(),
                 counter = 0;
 
-            manager.on('uploadStarted', callback);
+            manager.on('started', callback);
 
-            manager.on('uploadFinished', function (file) {
+            manager.on('finished', function (file) {
                 if (counter === 0) {
                     expect(callback.calledWith(files[0])).to.equal(true);
                     expect(callback.calledWith(files[1])).to.equal(false);
@@ -124,9 +113,36 @@ describe('Upload Manager', function () {
             manager.upload(files[0]);
             manager.upload(files[1]);
         });
-    });
 
-    describe('multiple files, single connection', function () {});
+        it('should emit progress events after each chunk', function (done) {
+            var callback = sinon.spy();
+
+            manager.upload(files[0]);
+
+            manager.on('progress', callback);
+
+            manager.on('finished', function () {
+                expect(callback.calledWith(files[0], 100)).to.equal(true);
+                expect(callback.calledWith(files[0], 200)).to.equal(true);
+                expect(callback.calledWith(files[0], 300)).to.equal(true);
+                done();
+            });
+        });
+
+        it('should emit error events', function (done) {
+            transport.send = function () {
+                throw new Error('upload failed');
+            };
+
+            manager.upload(files[0]);
+
+            manager.on('error', function (file, error) {
+                expect(file).to.equal(files[0]);
+                expect(error).to.be.a(Error);
+                done();
+            });
+        });
+    });
 
     describe('single file, multiple connections', function () {});
 
