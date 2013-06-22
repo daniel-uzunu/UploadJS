@@ -10,6 +10,7 @@
      */
     function UploadManager(transport, options) {
         this._queue = [];
+        this._fileMap = {};
         this._transport = transport;
         this._chunkSize = options.chunkSize || 102400;
         this._nextId = 0;
@@ -32,13 +33,15 @@
             throw new Error('No argument was passed.');
         }
 
-        this._queue.push(file);
+        var id = 'file' + this._nextId++;
+        this._fileMap[id] = file;
+        this._queue.push(id);
 
         if (!this._isUploading) {
             this._uploadQueuedFiles();
         }
 
-        return 'file' + this._nextId++;
+        return id;
     };
 
     /**
@@ -47,30 +50,31 @@
      */
     UploadManager.prototype._uploadQueuedFiles = function () {
         var self = this,
-            file = self._queue.shift();
+            id = this._queue.shift(),
+            file = this._fileMap[id];
 
         this._isUploading = true;
 
         Q.fcall(function () {
-            self.emit('started', file);
+            self.emit('started', id);
             return self._transport.initiateUpload(file.name, file.size);
-        }).then(function (id) {
+        }).then(function (serverId) {
             var promise = Q.resolve();
 
             for (var start = 0, size = file.size; start < size; start += self._chunkSize) {
                 promise = promise
-                    .then(self._sendChunk.bind(self, id, file, start))
+                    .then(self._sendChunk.bind(self, serverId, file, start))
                     .then(function (bytesSent) {
-                        self.emit('progress', file, bytesSent);
+                        self.emit('progress', id, bytesSent);
                     });
             }
 
             return promise;
         }).then(function () {
-            self.emit('finished', file);
+            self.emit('finished', id);
         }).fail(function (error) {
             if (self.getListeners('error').length > 0) {
-                self.emit('error', file, error);
+                self.emit('error', id, error);
             } else {
                 throw error;
             }
