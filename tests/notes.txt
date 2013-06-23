@@ -2,3 +2,4 @@
 - add pause/resume methods
 - Do I need to keep all files regarding of the status? I think it is better to only keep a queue with the files for which
 the download didn't start yet. Persistence should be implemented at the application level.
+- should I send a progress event when bytesSent == fileSize?

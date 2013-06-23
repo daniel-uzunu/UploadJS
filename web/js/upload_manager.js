@@ -8,19 +8,19 @@
      * it as the id of a DOM element.
      *
      * The following events are emitted:
-     * - started: indicates that the upload for the file was started;
+     * - start: indicates that the upload for the file was started;
      * - progress: indicates the current number of bytes that were successfully sent. It is guaranteed that a progress
      *   event is sent after each chunk is sent to the server;
-     * - finished: emitted after a successful upload;
+     * - complete: emitted after a successful upload;
      * - error: an error occurred while the file was uploading. If no event handler is registered the error is thrown.
      *
      * @example
      *
      *      var manager = new Manager(new XhrTransport(), {chunkSize: 1024});
      *
-     *      manager.on('started', function (fileId) {});
+     *      manager.on('start', function (fileId) {});
      *      manager.on('progress', function (fileId, bytesSent) {});
-     *      manager.on('finished', function (fileId) {});
+     *      manager.on('complete', function (fileId) {});
      *      manager.on('error', function (fileId, error) {});
      *
      *      manager.upload(file);
@@ -107,7 +107,7 @@
         this._isUploading = true;
 
         Q.fcall(function () {
-            self.emit('started', id);
+            self.emit('start', id);
             return self._transport.initiateUpload(file.name, file.size);
         }).then(function (serverId) {
             var promise = Q.resolve();
@@ -122,7 +122,7 @@
 
             return promise;
         }).then(function () {
-            self.emit('finished', id);
+            self.emit('complete', id);
         }).fail(function (error) {
             if (self.getListeners('error').length > 0) {
                 self.emit('error', id, error);
@@ -148,6 +148,6 @@
      */
     UploadManager.prototype._sendChunk = function (fileId, file, start) {
         var chunk = file.slice(start, start + this._chunkSize);
-        return this._transport.send(fileId, chunk, start, start + this._chunkSize);
+        return this._transport.send(fileId, chunk, start, start + chunk.size);
     };
 })(window.UploadJS = window.UploadJS || {});
