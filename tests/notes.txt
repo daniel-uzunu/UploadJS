@@ -1,3 +1,6 @@
+- Add docs to XhrTransport
+- Add licence: probably MIT
+
 - add cancel upload method
 - add pause/resume methods
 - Do I need to keep all files regarding of the status? I think it is better to only keep a queue with the files for which

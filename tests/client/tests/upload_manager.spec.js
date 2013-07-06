@@ -5,8 +5,6 @@ describe('Upload Manager', function () {
         TestTransport = TestUtils.TestTransport,
         transport;
 
-    this.timeout(500);
-
     beforeEach(function () {
         transport = new TestTransport();
         sinon.spy(transport, 'initiateUpload');
