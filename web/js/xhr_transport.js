@@ -2,7 +2,9 @@
 
 (function (UploadJS) {
     /**
+     * Transport implementation that uses XMLHttpRequest to send the file content to the server.
      *
+     * @param {String} uploadUrl
      * @constructor
      */
     function XhrTransport (uploadUrl) {
@@ -14,6 +16,14 @@
 
     XhrTransport.prototype = Object.create(UploadJS.Transport.prototype);
 
+    /**
+     * Posts the file details to the servers and resolves the returned promise with the upload url received from
+     * the server.
+     *
+     * @param {String} fileName
+     * @param {Number} fileSize
+     * @returns {Q.promise}
+     */
     XhrTransport.prototype.initiateUpload = function (fileName, fileSize) {
         var deferred = Q.defer(),
             self = this;
@@ -39,6 +49,46 @@
         return deferred.promise;
     };
 
+    /**
+     * Sends a file chunk to the server.
+     *
+     * The Content-Range header is used to indicate the part of the file which is uploaded in the current request.
+     * Usually this header is used as a response header, but it can also be used for requests when the request has a
+     * body. See http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.16 for more details.
+     *
+     * The server uses the Range header to indicate the range/ranges that where uploaded until now.
+     * See http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.35.
+     *
+     * Sample requests and responses used to upload a file:
+     *
+     *      PUT /upload/234 HTTP/1.1
+     *      Content-Range: bytes 0-499/1000
+     *      Content-Type: application/octet-stream
+     *      Content-Length: 500
+     *
+     *      <bytes 0-499>
+     *
+     *      HTTP/1.1 200 OK
+     *      Content-Length: 0
+     *      Range: bytes=0-499
+     *
+     *
+     *      PUT /upload/234 HTTP/1.1
+     *      Content-Range: bytes 500-999/1000
+     *      Content-Type: application/octet-stream
+     *      Content-Length: 500
+     *
+     *      <bytes 500-999>
+     *
+     *      HTTP/1.1 201 Created
+     *      Content-Length: 0
+     *
+     * @param {String} fileId the url at which the file is uploaded
+     * @param {Blob} chunk
+     * @param {Number} start the first byte
+     * @param {Number} end the last byte
+     * @returns {Q.promise} the number of bytes uploaded until now
+     */
     XhrTransport.prototype.send = function (fileId, chunk, start, end) {
         if (!this._files[fileId]) {
             throw new Error('The specified file id is invalid');
@@ -61,7 +111,7 @@
         });
 
         req.open('PUT', fileId, true);
-        req.setRequestHeader('Content-Range', start + '-' + (end - 1) + '/' + fileSize);
+        req.setRequestHeader('Content-Range', 'bytes ' + start + '-' + (end - 1) + '/' + fileSize);
         req.setRequestHeader('Content-Type', 'application/octet-stream');
         req.send(chunk);
 

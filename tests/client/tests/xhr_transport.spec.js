@@ -81,7 +81,7 @@ describe('XHR transport', function () {
 
         it('should set the Content-Range header', function () {
             transport.send(fileId, blob, 0, blob.size);
-            expect(requests[1].requestHeaders['Content-Range']).to.equal('0-8/100');
+            expect(requests[1].requestHeaders['Content-Range']).to.equal('bytes 0-8/100');
         });
 
         it('should resolve the returned promise with the number of bytes sent', function (done) {
@@ -91,7 +91,7 @@ describe('XHR transport', function () {
             });
 
             Q.fcall(function () {
-                requests[1].respond(308, {'Range': 'bytes=0-8', 'Content-Length': 0});
+                requests[1].respond(200, {'Range': 'bytes=0-8', 'Content-Length': 0});
             }).done();
         });
 
