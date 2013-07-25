@@ -30,3 +30,4 @@ app.use('/tests', express.static(path.join(__dirname, 'tests')));
 app.use('/src', express.static(path.join(__dirname, '../../web/js')));
 
 app.listen(port, ip);
+console.log('server started on: ' + port);
