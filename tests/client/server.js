@@ -27,7 +27,7 @@ var express = require('express'),
 app.use('/', express.static(path.join(__dirname, 'setup')));
 app.use('/mocha', express.static(path.join(__dirname, 'mocha')));
 app.use('/tests', express.static(path.join(__dirname, 'tests')));
-app.use('/src', express.static(path.join(__dirname, '../../web/js')));
+app.use('/src', express.static(path.join(__dirname, '../../client')));
 
 app.listen(port, ip);
 console.log('server started on: ' + port);
