@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Examples</title>
+    <script src="src/lib/q.js"></script>
+    <script src="src/lib/EventEmitter.js"></script>
+    <script src="src/transport.js"></script>
+    <script src="src/xhr_transport.js"></script>
+    <script src="src/upload_manager.js"></script>
+    
+    <script type="text/javascript">        
+        document.addEventListener('DOMContentLoaded', function () {
+            var transport = new UploadJS.XhrTransport('/upload');
+            var manager = new UploadJS.UploadManager(transport, {chunkSize: 100});
+            
+            var button = document.getElementById('button');
+            var upload = document.getElementById('upload');
+            
+            button.addEventListener('click', function () {
+                console.log(upload.files);
+                manager.upload(upload.files[0]);
+            });
+        });
+        
+    </script>
+</head>
+<body>
+    <h1>Welcome to examples!!!</h1>
+    
+    <input type="file" id="upload" multiple>
+    <button id="button">Upload</button>
+</body>
+</html>
